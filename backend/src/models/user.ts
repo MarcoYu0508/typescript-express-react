@@ -8,6 +8,7 @@ module.exports = (sequelize: any, DataTypes: any) => {
     declare name: string;
     declare account: string;
     declare password: string;
+    declare role: number;
 
     // timestamps!
     // createdAt can be undefined during creation
@@ -43,11 +44,17 @@ module.exports = (sequelize: any, DataTypes: any) => {
       type: DataTypes.STRING,
       allowNull: false
     },
+    role: {
+      type: DataTypes.NUMBER,
+      allowNull: false
+    },
     createdAt: DataTypes.DATE,
     updatedAt: DataTypes.DATE,
   }, {
     sequelize,
     modelName: 'User',
+    timestamps: true,
+    paranoid: true,
   });
   return User;
 };

@@ -1,10 +1,11 @@
-import { useState } from 'react';
+import { Component } from 'react';
 import { Outlet } from 'react-router-dom';
 // material
 import { styled } from '@mui/material/styles';
 //
 import DashboardNavbar from './DashboardNavbar';
 import DashboardSidebar from './DashboardSidebar';
+import TokenService from '../../services/token';
 
 // ----------------------------------------------------------------------
 
@@ -32,16 +33,25 @@ const MainStyle = styled('div')(({ theme }) => ({
 
 // ----------------------------------------------------------------------
 
-export default function DashboardLayout() {
-  const [open, setOpen] = useState(false);
+export default class DashboardLayout extends Component {
 
-  return (
-    <RootStyle>
-      <DashboardNavbar onOpenSidebar={() => setOpen(true)} />
-      <DashboardSidebar isOpenSidebar={open} onCloseSidebar={() => setOpen(false)} />
-      <MainStyle>
-        <Outlet />
-      </MainStyle>
-    </RootStyle>
-  );
+  constructor() {
+    super();
+    this.state = {
+      open: false,
+    }
+    this.user = TokenService.getUser();
+  }
+
+  render() {
+    return (
+      <RootStyle>
+        <DashboardNavbar onOpenSidebar={() => this.setState({open: true})} user={this.user} />
+        <DashboardSidebar isOpenSidebar={this.state.open} onCloseSidebar={() => this.setState({open: false})} user={this.user} />
+        <MainStyle>
+          <Outlet />
+        </MainStyle>
+      </RootStyle>
+    );
+  }
 }

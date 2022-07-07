@@ -19,7 +19,7 @@ const Router = () => {
             element: <PrivateRoute><DashboardLayout /></PrivateRoute>,
             // element: <DashboardLayout />,
             children: [
-                { path: '', element: <Home /> },
+                { path: '', element: <Navigate to="/dashboard/app" /> },
                 { path: 'app', element: <DashboardApp /> },
                 { path: 'user', element: <User /> },
                 { path: 'products', element: <Products /> },

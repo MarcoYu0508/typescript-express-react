@@ -4,7 +4,7 @@ import cookieParser from "cookie-parser";
 import expressFileupload from "express-fileupload";
 import cors from "cors";
 import 'dotenv/config';
-import { WebRouter } from './routes/web';
+import { Route } from './routes/router';
 
 
 // import db from "./models";
@@ -36,5 +36,5 @@ app.use(expressFileupload());
 app.set('trust proxy', true);
 app.use(cors());
 
-const webRouter = new WebRouter;
-app.use(webRouter.router);
+const route = new Route;
+app.use(route.router);
