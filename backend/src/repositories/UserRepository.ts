@@ -3,7 +3,12 @@ import bcrypt from 'bcrypt'
 
 const User = db.User;
 
+
 export class UserRepository {
+    static DEVELOPER = 1;
+    static ADMIN = 1;
+    static NORMAL = 2;
+
     async create(name: string, account: string, password: string, role = 1) {
         const salt = await bcrypt.genSalt();
         const hash_password = await bcrypt.hash(password, salt);
@@ -15,6 +20,7 @@ export class UserRepository {
         });
         return user;
     }
+
     async checkUser(account: string, password: string) {
         const user = await User.findOne({
             where: {
@@ -36,6 +42,7 @@ export class UserRepository {
         }
         throw Error('incorrect account');
     }
+
     async getUserByAccount(account: string) {
         return await User.findOne({
             where: {
@@ -43,6 +50,7 @@ export class UserRepository {
             }
         });
     }
+
     async getUserById(id: string) {
         return await User.findOne({
             where: {
@@ -50,11 +58,22 @@ export class UserRepository {
             }
         });
     }
+
     async getAllUsers() {
         return await User.findAll({
             order: [
                 ['id', 'ASC'],
             ],
         });
+    }
+
+    async deleteUser(id: string) {
+        const user = await this.getUserById(id);
+        if (user) {
+            await user.destroy();
+            return true;
+        } else {
+            return false;
+        }
     }
 }

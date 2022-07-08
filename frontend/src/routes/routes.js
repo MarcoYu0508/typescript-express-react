@@ -1,16 +1,17 @@
 import { Navigate, useRoutes } from 'react-router-dom';
 import PrivateRoute from './PrivateRoute';
+import AdminRoute from './AdminRoute';
 // layouts
-import DashboardLayout from './layouts/dashboard';
-import LogoOnlyLayout from './layouts/LogoOnlyLayout';
+import DashboardLayout from '../layouts/dashboard';
+import LogoOnlyLayout from '../layouts/LogoOnlyLayout';
 // pages
-import NotFound from './pages/Page404';
-import DashboardApp from './pages/DashboardApp';
-import Login from './pages/Login';
-import User from './pages/User';
-import Products from './pages/Products';
-import Blog from './pages/Blog';
-import Home from './pages/Home';
+import NotFound from '../pages/Page404';
+import DashboardApp from '../pages/DashboardApp';
+import Login from '../pages/Login';
+import User from '../pages/User';
+import Products from '../pages/Products';
+import Blog from '../pages/Blog';
+import Home from '../pages/Home';
 
 const Router = () => {
     return useRoutes([
@@ -21,7 +22,7 @@ const Router = () => {
             children: [
                 { path: '', element: <Navigate to="/dashboard/app" /> },
                 { path: 'app', element: <DashboardApp /> },
-                { path: 'user', element: <User /> },
+                { path: 'user', element: <AdminRoute><User /></AdminRoute> },
                 { path: 'products', element: <Products /> },
                 { path: 'blog', element: <Blog /> },
             ],

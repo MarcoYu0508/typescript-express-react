@@ -9,8 +9,8 @@ const maxAge = Number(process.env.TokenAge);
 
 export class AuthController {
 
-    private createToken = (id: string, name: string, account: string): string => {
-        return sign({ id, name, account }, String(process.env.TokenSecret), { expiresIn: maxAge });
+    private createToken = (id: string, name: string, account: string, role: number): string => {
+        return sign({ id, name, account, role }, String(process.env.TokenSecret), { expiresIn: maxAge });
     }
 
     private validationErrors = (validation: Result<ValidationError>) => {
@@ -38,13 +38,7 @@ export class AuthController {
 
         try {
             const user = await userRepo.checkUser(account, password);
-            const token = this.createToken(user.id, user.name, user.account);
-            // res.cookie('iroad_djtech', token, {
-            //     httpOnly: true,
-            //     maxAge: maxAge,
-            //     signed: true,
-            //     sameSite: true
-            // });
+            const token = this.createToken(user.id, user.name, user.account, user.role);
             res.status(200).json({
                 token
             });

@@ -8,7 +8,8 @@
     "build": "tsc --build",
     "clean": "tsc --build --clean",
     "start": "nodemon src/server.ts",
-    "rc": "nodemon dist/server.js"
+    "rc": "nodemon dist/server.js",
+    "user": "npx ts-node src/seeders/users.ts"
   },
   "author": "",
   "license": "ISC",

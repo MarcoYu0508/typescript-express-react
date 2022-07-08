@@ -15,6 +15,8 @@ import NavSection from '../../components/NavSection';
 //
 import navConfig from './NavConfig';
 
+import Role from '../../enum/Role';
+
 // ----------------------------------------------------------------------
 
 const DRAWER_WIDTH = 280;
@@ -80,7 +82,14 @@ export default function DashboardSidebar({ isOpenSidebar, onCloseSidebar, user }
         </Link>
       </Box>
 
-      <NavSection navConfig={navConfig} />
+      <NavSection navConfig={navConfig.filter(config => {
+          if (config.needAdmin) {
+            if (user.role > Role.roles.Admin.id) {
+              return false;
+            }
+          }
+          return true;
+      })} />
 
       {/* <Box sx={{ flexGrow: 1 }} />
 

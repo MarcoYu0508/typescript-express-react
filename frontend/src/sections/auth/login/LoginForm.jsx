@@ -5,11 +5,11 @@ import { useNavigate } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
 import { yupResolver } from '@hookform/resolvers/yup';
 // @mui
-import { Link, Stack, IconButton, InputAdornment } from '@mui/material';
+import { Stack, IconButton, InputAdornment } from '@mui/material';
 import { LoadingButton } from '@mui/lab';
 // components
 import Iconify from '../../../components/Iconify';
-import { FormProvider, RHFTextField, RHFCheckbox } from '../../../components/hook-form';
+import { FormProvider, RHFTextField } from '../../../components/hook-form';
 // auth
 import AuthService from "../../../services/auth";
 
@@ -51,7 +51,7 @@ export default function LoginForm() {
           const errors = err.response.data.errors;
           let errorsMessage = "";
           for (const key in errors) {
-            errorsMessage += `${errors[key]}\n` ;
+            errorsMessage += `${errors[key]}\n`;
           }
           setError(errorsMessage);
         }

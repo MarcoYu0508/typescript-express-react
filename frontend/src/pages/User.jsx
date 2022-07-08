@@ -1,13 +1,13 @@
 import { filter } from 'lodash';
 import { sentenceCase } from 'change-case';
-import { useState, Component } from 'react';
-import { Link as RouterLink } from 'react-router-dom';
+import { Component } from 'react';
 // material
 import {
   Card,
   Table,
   Stack,
   Avatar,
+  Box,
   Button,
   Checkbox,
   TableRow,
@@ -17,6 +17,7 @@ import {
   Typography,
   TableContainer,
   TablePagination,
+  Modal
 } from '@mui/material';
 // components
 import Page from '../components/Page';
@@ -29,6 +30,10 @@ import { UserListHead, UserListToolbar, UserMoreMenu } from '../sections/@dashbo
 import USERLIST from '../_mock/user';
 
 import DataService from '../services/data';
+
+import Role from '../enum/Role';
+
+import UserForm from '../components/UserForm';
 
 // ----------------------------------------------------------------------
 
@@ -43,11 +48,9 @@ const TABLE_HEAD = [
   { id: 'name', label: '名稱', alignRight: false },
   { id: 'account', label: '帳號', alignRight: false },
   { id: 'role', label: '身份', alignRight: false },
-  { id: 'status', label: '狀態', alignRight: false },
+  // { id: 'status', label: '狀態', alignRight: false },
   { id: '' },
 ];
-
-const USER_ROLE = ["Developer", "Admin", "Normal"];
 
 // ----------------------------------------------------------------------
 
@@ -80,6 +83,18 @@ function applySortFilter(array, comparator, query) {
   return stabilizedThis.map((el) => el[0]);
 }
 
+const style = {
+  position: 'absolute',
+  top: '50%',
+  left: '50%',
+  transform: 'translate(-50%, -50%)',
+  width: 400,
+  bgcolor: 'background.paper',
+  border: '2px solid #000',
+  boxShadow: 24,
+  p: 4,
+};
+
 export default class User extends Component {
   constructor() {
     super();
@@ -91,12 +106,12 @@ export default class User extends Component {
       filterName: '',
       rowsPerPage: 10,
       users: [],
+      modalOpen: false
     }
   }
 
   componentDidMount = async () => {
     const users = await DataService.users();
-    console.log(users);
     this.setState({ users: users });
   }
 
@@ -169,6 +184,44 @@ export default class User extends Component {
     return this.filteredUsers().length === 0;
   }
 
+  handleModalOpen = () => {
+    this.setState({ modalOpen: true })
+  }
+
+  handleModalClose = () => {
+    this.setState({ modalOpen: false })
+  };
+
+  createUser = async (data) => {
+    try {
+      const user = await DataService.createUser(data.name, data.account, data.password, data.role);
+      this.setState({ users: [user, ...this.state.users] })
+      this.handleModalClose();
+    } catch (err) {
+      if (err.response !== undefined) {
+        throw Error(DataService.handleError(err))
+      } else {
+        throw Error("無法建立使用者");
+      }
+    }
+  };
+
+  deleteUser = async (id) => {
+    try {
+      console.log(id);
+      const deleted = await DataService.deleteUser(id);
+      if (deleted === "success") {
+        this.setState({ users: this.state.users.filter(user => user.id !== id) });
+      }
+    } catch (err) {
+      if (err.response !== undefined) {
+        throw Error(DataService.handleError(err))
+      } else {
+        throw Error("無法建立使用者");
+      }
+    }
+  }
+
   render() {
     return (
       <Page title="User">
@@ -177,7 +230,7 @@ export default class User extends Component {
             <Typography variant="h4" gutterBottom>
               User
             </Typography>
-            <Button variant="contained" component={RouterLink} to="#" startIcon={<Iconify icon="eva:plus-fill" />}>
+            <Button variant="contained" onClick={this.handleModalOpen} startIcon={<Iconify icon="eva:plus-fill" />}>
               New User
             </Button>
           </Stack>
@@ -217,24 +270,24 @@ export default class User extends Component {
                           <TableCell align="left">{id}</TableCell>
                           <TableCell align="left">{name}</TableCell>
                           {/* <TableCell component="th" scope="row" padding="none">
-                            <Stack direction="row" alignItems="center" spacing={2}>
-                              <Avatar alt={name} src={avatarUrl} />
-                              <Typography variant="subtitle2" noWrap>
-                                {name}
-                              </Typography>
-                            </Stack>
-                          </TableCell> */}
+                                                        <Stack direction="row" alignItems="center" spacing={2}>
+                                                        <Avatar alt={name} src={avatarUrl} />
+                                                        <Typography variant="subtitle2" noWrap>
+                                                            {name}
+                                                        </Typography>
+                                                        </Stack>
+                                                    </TableCell> */}
                           <TableCell align="left">{account}</TableCell>
-                          <TableCell align="left">{USER_ROLE[role]}</TableCell>
+                          <TableCell align="left">{Role.getById(role).key}</TableCell>
                           {/* <TableCell align="left">{isVerified ? 'Yes' : 'No'}</TableCell> */}
-                          <TableCell align="left">
+                          {/* <TableCell align="left">
                             <Label variant="ghost" color={(deletedAt ? 'banned' : 'success')}>
                               {sentenceCase(deletedAt ? "banned" : "active")}
                             </Label>
-                          </TableCell>
+                          </TableCell> */}
 
                           <TableCell align="right">
-                            <UserMoreMenu />
+                            <UserMoreMenu user={row} deleteUser={this.deleteUser} editUser={() => { }} />
                           </TableCell>
                         </TableRow>
                       );
@@ -269,6 +322,18 @@ export default class User extends Component {
               onRowsPerPageChange={this.handleChangeRowsPerPage}
             />
           </Card>
+          <Modal
+            open={this.state.modalOpen}
+            onClose={this.handleModalClose}
+            aria-labelledby="modal-modal-title"
+            aria-describedby="modal-modal-description"
+          >
+            <Box sx={style}>
+              <h2>建立新使用者</h2>
+              <br />
+              <UserForm intent="Create" onSubmit={this.createUser} />
+            </Box>
+          </Modal>
         </Container>
       </Page>
     );
