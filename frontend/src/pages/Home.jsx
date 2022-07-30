@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import DataService from '../services/data';
+import UserService from '../services/user';
 import Page from '../components/Page';
 import { Grid, Container, Typography, Modal, Box, Button } from '@mui/material';
 
@@ -8,13 +8,13 @@ export default function Home() {
     const handleOpen = () => setOpen(true);
     const handleClose = () => {
         setOpen(false);
-        DataService.leave();
+        UserService.leave();
         window.location.reload(true);
     };
 
     const getData = async () => {
         try {
-            const data = await DataService.home();
+            const data = await UserService.home();
             console.log(data);
         } catch (error) {
             if (error.response.status === 401 || error.response.status === 403) {

@@ -7,7 +7,6 @@ import {
   Table,
   Stack,
   Avatar,
-  Box,
   Button,
   Checkbox,
   TableRow,
@@ -17,7 +16,6 @@ import {
   Typography,
   TableContainer,
   TablePagination,
-  Modal
 } from '@mui/material';
 // components
 import Page from '../components/Page';
@@ -26,10 +24,12 @@ import Scrollbar from '../components/Scrollbar';
 import Iconify from '../components/Iconify';
 import SearchNotFound from '../components/SearchNotFound';
 import { UserListHead, UserListToolbar, UserMoreMenu } from '../sections/@dashboard/user';
+import BasicModal from '../components/modal/BasicModal';
+import ConfirmDialog from '../components/dialog/ConfirmDialog';
 // mock
-import USERLIST from '../_mock/user';
+// import USERLIST from '../_mock/user';
 
-import DataService from '../services/data';
+import UserService from '../services/user';
 
 import Role from '../enum/Role';
 
@@ -83,18 +83,6 @@ function applySortFilter(array, comparator, query) {
   return stabilizedThis.map((el) => el[0]);
 }
 
-const style = {
-  position: 'absolute',
-  top: '50%',
-  left: '50%',
-  transform: 'translate(-50%, -50%)',
-  width: 400,
-  bgcolor: 'background.paper',
-  border: '2px solid #000',
-  boxShadow: 24,
-  p: 4,
-};
-
 export default class User extends Component {
   constructor() {
     super();
@@ -106,12 +94,18 @@ export default class User extends Component {
       filterName: '',
       rowsPerPage: 10,
       users: [],
-      modalOpen: false
+      updateUserModalOpen: false,
+      updateUser: {},
+      createUserModalOpen: false,
+      newUser: {},
+      deleteUserDialogOpen: false,
+      deleteUser: {}
     }
   }
 
   componentDidMount = async () => {
-    const users = await DataService.users();
+    const users = await UserService.users();
+    console.log(users);
     this.setState({ users: users });
   }
 
@@ -173,7 +167,7 @@ export default class User extends Component {
   };
 
   emptyRows = () => {
-    return this.state.page > 0 ? Math.max(0, (1 + this.state.page) * this.state.rowsPerPage - USERLIST.length) : 0;
+    return this.state.page > 0 ? Math.max(0, (1 + this.state.page) * this.state.rowsPerPage - this.state.users.length) : 0;
   }
 
   filteredUsers = () => {
@@ -184,40 +178,74 @@ export default class User extends Component {
     return this.filteredUsers().length === 0;
   }
 
-  handleModalOpen = () => {
-    this.setState({ modalOpen: true })
+  handleUpdateUserModalOpen = (open) => {
+    this.setState({ updateUserModalOpen: open });
   }
 
-  handleModalClose = () => {
-    this.setState({ modalOpen: false })
-  };
+  setUpdateUser = (user) => {
+    this.setState({ updateUser: user });
+  }
+
+  handleCreateUserModalOpen = (open) => {
+    this.setState({ createUserModalOpen: open })
+  }
+
+  creatingUser = (data) => {
+    this.setState({ newUser: data })
+  }
 
   createUser = async (data) => {
     try {
-      const user = await DataService.createUser(data.name, data.account, data.password, data.role);
+      const user = await UserService.createUser(data.name, data.account, data.password, data.role);
       this.setState({ users: [user, ...this.state.users] })
-      this.handleModalClose();
+      this.handleCreateUserModalOpen(false);
     } catch (err) {
+      console.error(err);
       if (err.response !== undefined) {
-        throw Error(DataService.handleError(err))
+        throw Error(UserService.handleError(err))
       } else {
         throw Error("無法建立使用者");
       }
     }
-  };
+  }
+
+  updateUser = async (data) => {
+    try {
+      const user = await UserService.updateUser(data.name, data.account, data.password, data.role);
+      this.setState({ users: [user, ...this.state.users.filter(_user => _user.id !== user.id)] })
+      console.log(user);
+      this.handleUpdateUserModalOpen(false);
+    } catch (err) {
+      console.error(err);
+      if (err.response !== undefined) {
+        throw Error(UserService.handleError(err))
+      } else {
+        throw Error("無法建立使用者");
+      }
+    }
+  }
+
+  handleDeteUserDialogOpen = (open, user) => {
+    if (open) {
+      this.setState({ deleteUserDialogOpen: open, deleteUser: user });
+    } else {
+      this.setState({ deleteUserDialogOpen: open, deleteUser: {} });
+    }
+  }
 
   deleteUser = async (id) => {
+    console.log(id);
     try {
-      console.log(id);
-      const deleted = await DataService.deleteUser(id);
+      const deleted = await UserService.deleteUser(id);
       if (deleted === "success") {
         this.setState({ users: this.state.users.filter(user => user.id !== id) });
+        this.handleDeteUserDialogOpen(false);
       }
     } catch (err) {
       if (err.response !== undefined) {
-        throw Error(DataService.handleError(err))
+        throw Error(UserService.handleError(err))
       } else {
-        throw Error("無法建立使用者");
+        throw Error("無法刪除使用者");
       }
     }
   }
@@ -230,7 +258,7 @@ export default class User extends Component {
             <Typography variant="h4" gutterBottom>
               User
             </Typography>
-            <Button variant="contained" onClick={this.handleModalOpen} startIcon={<Iconify icon="eva:plus-fill" />}>
+            <Button variant="contained" onClick={() => { this.handleCreateUserModalOpen(true) }} startIcon={<Iconify icon="eva:plus-fill" />}>
               New User
             </Button>
           </Stack>
@@ -252,7 +280,7 @@ export default class User extends Component {
                   />
                   <TableBody>
                     {this.filteredUsers().slice(this.state.page * this.state.rowsPerPage, this.state.page * this.state.rowsPerPage + this.state.rowsPerPage).map((row) => {
-                      const { id, name, account, role, deletedAt } = row;
+                      const { id, name, account, role } = row;
                       const isItemSelected = this.state.selected.indexOf(name) !== -1;
 
                       return (
@@ -287,7 +315,7 @@ export default class User extends Component {
                           </TableCell> */}
 
                           <TableCell align="right">
-                            <UserMoreMenu user={row} deleteUser={this.deleteUser} editUser={() => { }} />
+                            <UserMoreMenu user={row} deleteUser={() => { this.handleDeteUserDialogOpen(true, row) }} editUser={() => { this.setUpdateUser(row); this.handleUpdateUserModalOpen(true); }} />
                           </TableCell>
                         </TableRow>
                       );
@@ -315,25 +343,36 @@ export default class User extends Component {
             <TablePagination
               rowsPerPageOptions={[5, 10, 25]}
               component="div"
-              count={USERLIST.length}
+              count={this.state.users.length}
               rowsPerPage={this.state.rowsPerPage}
               page={this.state.page}
               onPageChange={this.handleChangePage}
               onRowsPerPageChange={this.handleChangeRowsPerPage}
             />
           </Card>
-          <Modal
-            open={this.state.modalOpen}
-            onClose={this.handleModalClose}
-            aria-labelledby="modal-modal-title"
-            aria-describedby="modal-modal-description"
-          >
-            <Box sx={style}>
-              <h2>建立新使用者</h2>
-              <br />
-              <UserForm intent="Create" onSubmit={this.createUser} />
-            </Box>
-          </Modal>
+
+          {/* Update User Modal*/}
+          <BasicModal
+            open={this.state.updateUserModalOpen}
+            onClose={() => { this.handleUpdateUserModalOpen(false) }}
+            title="建立新使用者">
+            <UserForm intent="Update" onSubmit={this.updateUser} updateUser={this.state.updateUser} />
+          </BasicModal>
+          {/* Create User Modal*/}
+          <BasicModal
+            open={this.state.createUserModalOpen}
+            onClose={() => { this.handleCreateUserModalOpen(false) }}
+            title="建立新使用者">
+            <UserForm intent="Create" onSubmit={this.createUser} creatingUser={this.creatingUser} newUser={this.state.newUser} />
+          </BasicModal>
+          {/* Delete User Dialog*/}
+          <ConfirmDialog
+            open={this.state.deleteUserDialogOpen}
+            onClose={() => { this.handleDeteUserDialogOpen(false); }}
+            title="刪除使用者"
+            content={<>請問確定要刪除使用者"<strong>{this.state.deleteUser.name}</strong>"嗎？</>}
+            cancelOnClick={() => { this.handleDeteUserDialogOpen(false); }}
+            confirmOnClcik={() => { this.deleteUser(this.state.deleteUser.id) }} />
         </Container>
       </Page>
     );

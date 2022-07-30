@@ -21,6 +21,11 @@ const deleteUser = async (id) => {
   return res.data;
 }
 
+const updateUser = async (name, account, password, role) => {
+  const res = await api.patch('/user/update', { name, account, password, role });
+  return res.data;
+}
+
 const handleError = (err) => {
   if (err.response.data !== undefined) {
     if (err.response.data.errors) {
@@ -40,13 +45,14 @@ const leave = () => {
   TokenService.removeToken();
 }
 
-const DataService = {
+const UserService = {
   home,
   leave,
   users,
   createUser,
   deleteUser,
+  updateUser,
   handleError
 }
 
-export default DataService;
+export default UserService;

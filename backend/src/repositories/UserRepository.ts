@@ -5,9 +5,11 @@ const User = db.User;
 
 
 export class UserRepository {
-    static DEVELOPER = 1;
+    static DEVELOPER = 0;
     static ADMIN = 1;
     static NORMAL = 2;
+
+    roleList = [UserRepository.DEVELOPER, UserRepository.ADMIN, UserRepository.NORMAL];
 
     async create(name: string, account: string, password: string, role = 1) {
         const salt = await bcrypt.genSalt();
@@ -75,5 +77,28 @@ export class UserRepository {
         } else {
             return false;
         }
+    }
+
+    async updateUser(name: string, account: string, role: number, password?: string) {
+        const user = await this.getUserByAccount(account);
+
+        if (user) {
+            if (account != user.account) {
+                user.account = account;
+            }
+            if (name != user.name) {
+                user.name = name;
+            }
+            if (password != null && password != '') {
+                const salt = await bcrypt.genSalt();
+                const newPassword = await bcrypt.hash(password, salt);
+                user.password = newPassword;
+            }
+            if (role != user.role && this.roleList.includes(role)) {
+                user.role = role;
+            }
+            await user.save();
+        }
+        return user;
     }
 }

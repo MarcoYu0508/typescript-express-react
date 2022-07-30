@@ -5,7 +5,7 @@ import { ValidationErrorItem } from 'sequelize';
 
 const userRepo = new UserRepository;
 
-export class ApiController {
+export class UserController {
 
     usersGet = async (req: Request, res: Response) => {
         const users = await userRepo.getAllUsers();
@@ -42,9 +42,29 @@ export class ApiController {
         }
     }
 
+    updateUser = async (req: Request, res: Response) => {
+        const { name, account, password, role } = req.body;
+
+        const validation = validationResult(req);
+
+        if (!validation.isEmpty()) {
+            res.status(422).json({
+                errors: this.validationErrors(validation)
+            });
+            return;
+        }
+
+        const user = await userRepo.updateUser(name, account, role, password);
+
+        if (user != null) {
+            res.status(200).json(user);
+        } else {
+            res.status(422).json({ errors: { "user": "無使用者" } });
+        }
+    }
+
     deleteUser = async (req: Request, res: Response) => {
         const { id } = req.body;
-        console.log(req.body);
 
         const validation = validationResult(req);
 
@@ -91,6 +111,15 @@ export class ApiController {
                 return [
                     body('id', '請輸入id').exists().isUUID(),
                 ]
+            case "update-user":
+                return [
+                    body('account', '請輸入帳號').exists(),
+                    body('name', "請輸入名稱").exists(),
+                    body('password')
+                        .optional({ checkFalsy: true })
+                        .matches(/^(?=.*\d)(?=.*[a-z])[0-9a-zA-Z]{8,20}/)
+                        .withMessage('請輸入長度8~20，至少含1個英文字母的密碼'),
+                ];
             default:
                 return [];
         }

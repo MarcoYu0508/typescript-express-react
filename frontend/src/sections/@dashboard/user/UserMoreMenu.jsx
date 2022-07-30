@@ -28,7 +28,7 @@ export default function UserMoreMenu({ user, deleteUser, editUser }) {
         transformOrigin={{ vertical: 'top', horizontal: 'right' }}
       >
         <MenuItem sx={{ color: 'text.secondary' }} onClick={() => {
-          deleteUser(user.id);
+          deleteUser();
           setIsOpen(false)
         }}>
           <ListItemIcon>
@@ -38,7 +38,7 @@ export default function UserMoreMenu({ user, deleteUser, editUser }) {
         </MenuItem>
 
         <MenuItem sx={{ color: 'text.secondary' }} onClick={() => {
-          editUser(user);
+          editUser();
           setIsOpen(false)
         }}>
           <ListItemIcon>
