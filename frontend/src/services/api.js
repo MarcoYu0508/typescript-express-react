@@ -13,7 +13,7 @@ instance.interceptors.request.use(
   (config) => {
     const token = TokenService.getAccessToken();
     if (token) {
-      config.headers["x-auth-token"] = token;
+      config.headers["Authorization"] = `Bearer ${token}`;
     }
     return config;
   },

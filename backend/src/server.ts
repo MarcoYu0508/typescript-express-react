@@ -7,7 +7,7 @@ import 'dotenv/config';
 import { Route } from './routes/router';
 
 
-// import db from "./models";
+import db from "./models";
 
 const app = express();
 
@@ -16,10 +16,11 @@ const port = process.env.PORT || 3000;
 app.set('port', port);
 
 const server = http.createServer(app);
-// db.sequelize.sync().then(() => {
-//     server.listen(port);
-// })
-server.listen(port);
+
+db.sequelize.sync().then(() => {
+    server.listen(port);
+})
+
 server.on('error', (error: Error) => {
     console.error(error);
 });

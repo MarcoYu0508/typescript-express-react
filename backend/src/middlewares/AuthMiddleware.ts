@@ -11,8 +11,9 @@ export class AuthMiddleware {
     }
 
     requireAuth = async (req: Request, res: Response, next: NextFunction) => {
-        const token = req.header("x-auth-token");
-        if (!token) {
+        const authorization: string | undefined = req.header("authorization");
+
+        if (!authorization) {
             res.status(401).json({
                 errors: [
                     {
@@ -20,8 +21,10 @@ export class AuthMiddleware {
                     },
                 ],
             });
+            return;
         }
         // Authenticate token
+        const token = authorization.split(' ')[1];
         try {
             const user = verify(token!, String(process.env.TokenSecret));
             console.log(user);
@@ -38,8 +41,9 @@ export class AuthMiddleware {
     }
 
     requireAdmin = async (req: Request, res: Response, next: NextFunction) => {
-        const token = req.header("x-auth-token");
-        if (!token) {
+        const authorization: string | undefined = req.header("authorization");
+
+        if (!authorization) {
             res.status(401).json({
                 errors: [
                     {
@@ -47,8 +51,10 @@ export class AuthMiddleware {
                     },
                 ],
             });
+            return;
         }
         // Authenticate token
+        const token = authorization.split(' ')[1];
         try {
             const _user: any = verify(token!, String(process.env.TokenSecret));
             const user = await this.userRepo.getUserByAccount(_user.account);
@@ -63,6 +69,7 @@ export class AuthMiddleware {
             }
             next();
         } catch (error) {
+            console.error(error);
             res.status(403).json({
                 errors: [
                     {
